@@ -22,29 +22,6 @@ npm run validate   # sanity-check the question bank
 
 Requires Node 18+.
 
-## Optional: cloud sync with Firebase (about 5 minutes)
-
-1. Create a project at https://console.firebase.google.com (Spark plan is free, no card).
-2. **Build > Authentication > Get started**, enable **Google** and/or **Email/Password**.
-3. **Build > Firestore Database > Create database**, then set these rules:
-   ```
-   rules_version = '2';
-   service cloud.firestore {
-     match /databases/{db}/documents {
-       match /users/{uid} {
-         allow read, write: if request.auth != null && request.auth.uid == uid;
-       }
-     }
-   }
-   ```
-4. **Project settings > Your apps > Web app**, copy the config object.
-5. Either paste it in the app under **Settings > Cloud sync**, or put the values in `.env` (see `.env.example`). For GitHub Pages add them as repository *Variables* (Settings > Secrets and variables > Actions > Variables) named `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_APP_ID`.
-6. **Authentication > Settings > Authorized domains**: add `<your-username>.github.io` (or your other host).
-
-The Firebase web config is not a secret; the Firestore rules above are what protect user data.
-
-> Full step-by-step deployment guide: see [DEPLOY.md](DEPLOY.md).
-
 ## Put it on GitHub and host it free
 
 ```bash
