@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { TOPICS, topicIcon, topicName } from '../data/index.js';
+import { TOPICS, TOPIC_GROUPS, CUSTOM_TOPIC } from '../data/index.js';
 import { useStore, allNotes, removeCustom } from '../lib/store.js';
 import Sketch from './Sketch.jsx';
-import { Chip } from './Profile.jsx';
-import { Empty } from './ui.jsx';
+import Icon from './icons.jsx';
+import { ExplainButton } from './Explain.jsx';
+import { Empty, PageHeader, TopicDot } from './ui.jsx';
+import { topicName } from '../data/index.js';
 
 export default function Notes() {
   const s = useStore();
@@ -15,35 +17,31 @@ export default function Notes() {
   const hasCustom = s.custom.notes.length > 0;
 
   return (
-    <div className="stack">
-      <div className="card stack">
-        <h1>Concept notes</h1>
-        <p className="muted">Quick hand-written style revision sheets. Need one on something specific? Use <a href="#/generate">Generate</a> to have AI write a note.</p>
-        <input placeholder="Search notes…" value={q} onChange={(e) => setQ(e.target.value)} />
-        <div className="chips">
-          <Chip on={topic === 'all'} onClick={() => setTopic('all')}>All</Chip>
-          {[...TOPICS, ...(hasCustom ? [{ id: 'custom', name: 'My Custom Topics', icon: '✨' }] : [])].map((t) => (
-            <Chip key={t.id} on={topic === t.id} onClick={() => setTopic(t.id)}>{t.icon} {t.name}</Chip>
+    <div className="stack-lg">
+      <PageHeader title="Concept notes" sub="Hand-written style revision sheets with sketches. Need one on something specific? Generate it with AI."
+        actions={<a className="btn" href="#/generate"><Icon name="sparkles" size={15} /> Generate a note</a>} />
+      <div className="filters" style={{ gridTemplateColumns: '1fr 240px' }}>
+        <div className="search"><Icon name="bank" size={16} /><input placeholder="Search notes" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search notes" /></div>
+        <select value={topic} onChange={(e) => setTopic(e.target.value)} aria-label="Topic">
+          <option value="all">All topics</option>
+          {TOPIC_GROUPS.map((g) => (
+            <optgroup key={g} label={g}>{TOPICS.filter((t) => t.group === g).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</optgroup>
           ))}
-        </div>
+          {hasCustom && <option value="custom">{CUSTOM_TOPIC.name}</option>}
+        </select>
       </div>
-      {!shown.length && <Empty>No notes found.</Empty>}
+      {!shown.length && <Empty>No notes match your search.</Empty>}
       <div className="notes-grid">
         {shown.map((n) => (
           <article key={n.id} className="paper">
             <div className="paper-tape" />
-            <header className="row between">
-              <h2 className="hand">{n.title}</h2>
-              <span className="tag paper-tag">{topicIcon(n.topic)} {topicName(n.topic)}</span>
-            </header>
+            <h2>{n.title}</h2>
+            <span className="tag"><TopicDot id={n.topic} />{topicName(n.topic)}</span>
             {n.diagram && <Sketch diagram={n.diagram} seed={n.id} />}
-            <ul className="hand-list">
-              {n.points.map((p, i) => <li key={i}>{p}</li>)}
-            </ul>
+            <ul className="hand-list">{n.points.map((p, i) => <li key={i}>{p}</li>)}</ul>
             {n.code && <pre className="sticky"><code>{n.code}</code></pre>}
-            {n.source === 'ai' && (
-              <button className="link tiny" onClick={() => removeCustom('notes', n.id)}>remove AI note</button>
-            )}
+            <ExplainButton item={{ kind: 'concept note', topicId: n.topic, title: n.title, body: n.points.join('\n- ') + (n.code ? '\nCode:\n' + n.code : '') }} label="Explain with AI" />
+            {n.source === 'ai' && <button className="link" onClick={() => removeCustom('notes', n.id)}>Remove this note</button>}
           </article>
         ))}
       </div>

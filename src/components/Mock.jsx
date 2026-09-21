@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { LEVELS } from '../data/index.js';
 import { useStore, levelInfo, pickQuestions, saveInterview, rateCard } from '../lib/store.js';
-import { Chip, TopicPicker } from './Profile.jsx';
-import { LevelBadge, TopicTag, Answer } from './ui.jsx';
+import { TopicPicker, LevelChips } from './Profile.jsx';
+import { LevelBadge, TopicTag, Answer, PageHeader, Ring, Segmented } from './ui.jsx';
+import Icon from './icons.jsx';
+import { ExplainButton } from './Explain.jsx';
 import { go } from '../lib/router.js';
 
 const uid = () => Math.random().toString(36).slice(2, 9);
@@ -27,12 +29,14 @@ export default function Mock() {
   };
 
   if (phase === 'setup') return <Setup cfg={cfg} setCfg={setCfg} start={start} info={info} customTopics={s.custom.questions.length > 0} />;
-  if (phase === 'run') return <Run session={session} onDone={(answers, skipped) => {
-    const done = { ...session, answers, skipped };
-    setSession(done);
-    persist(done);
-    setPhase('results');
-  }} />;
+  if (phase === 'run') {
+    return <Run session={session} onDone={(answers) => {
+      const done = { ...session, answers };
+      setSession(done);
+      persist(done);
+      setPhase('results');
+    }} />;
+  }
   return <Results session={session} setSession={setSession} again={() => setPhase('setup')} />;
 }
 
@@ -40,50 +44,37 @@ function persist(sess) {
   const items = sess.qs.map((q) => ({ qid: q.id, answer: sess.answers[q.id] || '', grade: sess.grades[q.id] || null }));
   const graded = items.filter((i) => i.grade);
   const score = graded.length ? graded.reduce((a, i) => a + (i.grade === 'got' ? 1 : i.grade === 'partial' ? 0.5 : 0), 0) / sess.qs.length : null;
-  saveInterview({
-    id: sess.id, date: sess.date, topics: sess.cfg.topics, levels: sess.cfg.levels,
-    total: sess.qs.length, score, items,
-  });
+  saveInterview({ id: sess.id, date: sess.date, topics: sess.cfg.topics, levels: sess.cfg.levels, total: sess.qs.length, score, items });
 }
 
 function Setup({ cfg, setCfg, start, info, customTopics }) {
-  const toggleLevel = (id) => {
-    const cur = new Set(cfg.levels);
-    cur.has(id) ? cur.delete(id) : cur.add(id);
-    if (cur.size) setCfg({ ...cfg, levels: [...cur].sort() });
-  };
   return (
-    <div className="card stack">
-      <h1>Mock interview</h1>
-      <p className="muted">Answer in your own words, just like a real interview. Model answers stay hidden until you finish.</p>
-      <h3>Topics</h3>
-      <TopicPicker value={cfg.topics} onChange={(topics) => setCfg({ ...cfg, topics })} extra={customTopics ? [{ id: 'custom', name: 'My Custom Topics', icon: '✨' }] : []} />
-      <h3>Question levels</h3>
-      <div className="chips">
-        {LEVELS.map((l) => (
-          <Chip key={l.id} on={cfg.levels.includes(l.id)} onClick={() => toggleLevel(l.id)}>
-            {l.name} <small>{l.years}</small>
-          </Chip>
-        ))}
-        <button className="link" onClick={() => setCfg({ ...cfg, levels: info.levels })}>Reset to my profile</button>
-      </div>
-      <div className="grid2">
-        <label className="field"><span>Number of questions</span>
-          <select value={cfg.count} onChange={(e) => setCfg({ ...cfg, count: Number(e.target.value) })}>
-            {[5, 10, 15, 20, 30].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
-        </label>
-        <label className="field"><span>Time per question</span>
-          <select value={cfg.timer} onChange={(e) => setCfg({ ...cfg, timer: Number(e.target.value) })}>
-            <option value={0}>No timer</option>
-            <option value={90}>1.5 min</option>
-            <option value={180}>3 min</option>
-            <option value={300}>5 min</option>
-          </select>
-        </label>
-      </div>
-      <div className="row end">
-        <button className="btn primary" disabled={!cfg.topics.length} onClick={start}>Start interview</button>
+    <div>
+      <PageHeader title="Mock interview" sub="Answer in your own words, like a real interview. Model answers stay hidden until you finish." />
+      <div className="card">
+        <div className="form-grid">
+          <div className="lab"><h3>Topics</h3><p>Questions are drawn from everything you select.</p></div>
+          <TopicPicker value={cfg.topics} onChange={(topics) => setCfg({ ...cfg, topics })} custom={customTopics} />
+        </div>
+        <div className="form-grid">
+          <div className="lab"><h3>Difficulty</h3><p>Defaults to your profile. Adjust to stretch or warm up.</p></div>
+          <LevelChips levels={cfg.levels} onChange={(levels) => setCfg({ ...cfg, levels })} onReset={() => setCfg({ ...cfg, levels: info.levels })} />
+        </div>
+        <div className="form-grid">
+          <div className="lab"><h3>Format</h3><p>Length and pacing of the session.</p></div>
+          <div className="stack">
+            <div className="field"><span>Questions</span>
+              <Segmented label="Question count" value={cfg.count} onChange={(count) => setCfg({ ...cfg, count })} options={[5, 10, 15, 20, 30].map((n) => [n, n])} />
+            </div>
+            <div className="field"><span>Time per question</span>
+              <Segmented label="Timer" value={cfg.timer} onChange={(timer) => setCfg({ ...cfg, timer })} options={[[0, 'Off'], [90, '1.5 min'], [180, '3 min'], [300, '5 min']]} />
+            </div>
+          </div>
+        </div>
+        <div className="bar-actions">
+          <span className="hint">{cfg.topics.length} topic{cfg.topics.length === 1 ? '' : 's'} · {cfg.levels.map((l) => LEVELS[l - 1].name).join(', ')}</span>
+          <button className="btn primary lg" disabled={!cfg.topics.length} onClick={start}><Icon name="play" size={14} /> Start interview</button>
+        </div>
       </div>
     </div>
   );
@@ -94,45 +85,59 @@ function Run({ session, onDone }) {
   const [i, setI] = useState(0);
   const [answers, setAnswers] = useState({});
   const [left, setLeft] = useState(cfg.timer);
+  const [confirmEnd, setConfirmEnd] = useState(false);
   const ref = useRef();
   const q = qs[i];
 
   useEffect(() => { setLeft(cfg.timer); ref.current?.focus(); }, [i, cfg.timer]);
   useEffect(() => {
-    if (!cfg.timer) return;
+    if (!cfg.timer) return undefined;
     const t = setInterval(() => setLeft((v) => Math.max(0, v - 1)), 1000);
     return () => clearInterval(t);
   }, [i, cfg.timer]);
 
   const next = () => (i + 1 >= qs.length ? onDone(answers) : setI(i + 1));
-  const pct = Math.round((i / qs.length) * 100);
+  const onKey = (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); next(); } };
 
   return (
-    <div className="card stack">
+    <div className="focus stack">
       <div className="row between">
-        <span className="muted">Question {i + 1} of {qs.length}</span>
-        {cfg.timer > 0 && <span className={`timer ${left < 20 ? 'warn' : ''}`}>⏱ {fmt(left)}</span>}
-      </div>
-      <div className="progress"><div style={{ width: `${pct}%` }} /></div>
-      <div className="row gap"><TopicTag q={q} /><LevelBadge level={q.level} /></div>
-      <h2 className="question">{q.q}</h2>
-      <textarea
-        ref={ref} rows={8} placeholder="Type your answer, or talk it through out loud and jot key points here…"
-        value={answers[q.id] || ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-      />
-      <div className="row between">
-        <button className="btn ghost" onClick={() => { if (confirm('End the interview now? Unanswered questions will still be reviewed.')) onDone(answers); }}>End early</button>
+        <span className="muted small">Question {i + 1} of {qs.length}</span>
         <div className="row gap">
-          <button className="btn" onClick={next}>Skip</button>
-          <button className="btn primary" onClick={next}>{i + 1 >= qs.length ? 'Finish' : 'Next'}</button>
+          {cfg.timer > 0 && <span className={`timer ${left < 20 ? 'warn' : ''}`}><Icon name="clock" size={14} />{fmt(left)}</span>}
+          {confirmEnd ? (
+            <>
+              <button className="btn sm danger" onClick={() => onDone(answers)}>End and review</button>
+              <button className="btn sm quiet" onClick={() => setConfirmEnd(false)}>Cancel</button>
+            </>
+          ) : <button className="btn sm quiet" onClick={() => setConfirmEnd(true)}>End early</button>}
         </div>
       </div>
-      {left === 0 && cfg.timer > 0 && <p className="muted small">Time is up for this question - wrap up and move on, as you would in a real interview.</p>}
+      <div className="progress" aria-hidden="true">
+        {qs.map((x, n) => <i key={x.id} className={n < i ? 'done' : n === i ? 'now' : ''} />)}
+      </div>
+      <div className="card focus-card stack">
+        <div className="row gap wrap"><TopicTag q={q} /><LevelBadge level={q.level} /></div>
+        <h2 className="question" style={{ fontSize: '1.45rem' }}>{q.q}</h2>
+        <textarea
+          ref={ref} placeholder="Type your answer, or talk it through out loud and jot down the key points…"
+          value={answers[q.id] || ''} onKeyDown={onKey} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+        />
+        <div className="row between">
+          <span className="hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> for next</span>
+          <div className="row gap">
+            <button className="btn" onClick={next}>Skip</button>
+            <button className="btn primary" onClick={next}>{i + 1 >= qs.length ? 'Finish' : 'Next'} <Icon name="arrow" size={15} /></button>
+          </div>
+        </div>
+        {left === 0 && cfg.timer > 0 && <p className="hint">Time is up for this question. Wrap up and move on, as you would in a real interview.</p>}
+      </div>
     </div>
   );
 }
 
 function Results({ session, setSession, again }) {
+  const [open, setOpen] = useState({ 0: true });
   const grade = (qid, g) => {
     const next = { ...session, grades: { ...session.grades, [qid]: g } };
     setSession(next);
@@ -145,40 +150,68 @@ function Results({ session, setSession, again }) {
     return c;
   }, [session.grades]);
   const graded = counts.got + counts.partial + counts.missed;
-  const pct = graded ? Math.round(((counts.got + counts.partial * 0.5) / session.qs.length) * 100) : null;
+  const score = graded ? (counts.got + counts.partial * 0.5) / session.qs.length : null;
+  const allOpen = session.qs.every((_, n) => open[n]);
 
   return (
-    <div className="stack">
-      <div className="card row between wrap">
-        <div>
-          <h1>Interview complete</h1>
-          <p className="muted">Compare your answers with the model answers and grade yourself honestly. Missed questions are added to your flash cards.</p>
-        </div>
-        <div className="scorebox">
-          <div className="score">{pct === null ? '—' : `${pct}%`}</div>
-          <div className="muted small">{graded}/{session.qs.length} graded</div>
+    <div className="stack-lg">
+      <PageHeader title="Interview review" sub="Compare your answers with the model answers and grade yourself honestly. Missed questions are added to your flash cards." />
+      <div className="card summary">
+        <Ring value={score} size={96} stroke={9} />
+        <div className="stack">
+          <div className="summary-stats">
+            <div><b>{counts.got}</b><span className="small muted">Nailed it</span></div>
+            <div><b>{counts.partial}</b><span className="small muted">Partly</span></div>
+            <div><b>{counts.missed}</b><span className="small muted">Missed</span></div>
+            <div><b>{session.qs.length - graded}</b><span className="small muted">Not graded</span></div>
+          </div>
+          <div className="row gap wrap">
+            <button className="btn primary" onClick={again}>New interview</button>
+            <button className="btn" onClick={() => go('cards')}>Practise missed cards</button>
+          </div>
         </div>
       </div>
-      {session.qs.map((q, n) => {
-        const g = session.grades[q.id];
-        return (
-          <div key={q.id} className={`card stack review ${g || ''}`}>
-            <div className="row gap wrap"><span className="muted">#{n + 1}</span><TopicTag q={q} /><LevelBadge level={q.level} /></div>
-            <h3 className="question">{q.q}</h3>
-            <div className="yours"><b>Your answer</b><p>{session.answers[q.id] || <i className="muted">Skipped / no answer</i>}</p></div>
-            <div className="model"><b>Model answer</b><Answer text={q.a} /></div>
-            <div className="row gap grade">
-              <span className="muted small">How did you do?</span>
-              {[['got', '✅ Nailed it'], ['partial', '🟡 Partly'], ['missed', '❌ Missed']].map(([k, label]) => (
-                <button key={k} className={`btn sm ${g === k ? 'primary' : ''}`} onClick={() => grade(q.id, k)}>{label}</button>
-              ))}
+
+      <div className="stack">
+        <div className="row between">
+          <h3>Questions</h3>
+          <button className="link" onClick={() => setOpen(Object.fromEntries(session.qs.map((_, n) => [n, !allOpen])))}>{allOpen ? 'Collapse all' : 'Expand all'}</button>
+        </div>
+        {session.qs.map((q, n) => {
+          const g = session.grades[q.id];
+          return (
+            <div key={q.id} className={`review-item ${open[n] ? 'open' : ''}`}>
+              <button className="review-head" onClick={() => setOpen({ ...open, [n]: !open[n] })} aria-expanded={!!open[n]}>
+                <span className="num">{n + 1}</span>
+                <span className="q">{q.q}</span>
+                {g && <span className={`pill ${g === 'got' ? 'good' : g === 'partial' ? 'warn' : 'bad'}`}>{g === 'got' ? 'Nailed' : g === 'partial' ? 'Partly' : 'Missed'}</span>}
+                <Icon name="chevron" className="chev" size={16} />
+              </button>
+              {open[n] && (
+                <div className="review-body">
+                  <div className="row gap wrap"><TopicTag q={q} /><LevelBadge level={q.level} /></div>
+                  <div className="stack" style={{ gap: 6 }}>
+                    <span className="eyebrow">Your answer</span>
+                    <div className="yours">{session.answers[q.id] || <span className="faint">Skipped, no answer given.</span>}</div>
+                  </div>
+                  <div className="stack" style={{ gap: 6 }}>
+                    <span className="eyebrow">Model answer</span>
+                    <Answer text={q.a} />
+                  </div>
+                  <div><ExplainButton item={{ kind: 'interview question', topicId: q.topic, topicLabel: q.subject, level: q.level, title: q.q, body: q.a }} /></div>
+                  <div className="grade-row">
+                    <span className="small muted">How did you do?</span>
+                    <div className="seg" role="group" aria-label="Self grade">
+                      {[['got', 'Nailed it'], ['partial', 'Partly'], ['missed', 'Missed']].map(([k, label]) => (
+                        <button key={k} className={g === k ? `on ${k}` : ''} aria-pressed={g === k} onClick={() => grade(q.id, k)}>{label}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
-        );
-      })}
-      <div className="row end gap">
-        <button className="btn" onClick={() => go('cards')}>Practice flash cards</button>
-        <button className="btn primary" onClick={again}>New interview</button>
+          );
+        })}
       </div>
     </div>
   );

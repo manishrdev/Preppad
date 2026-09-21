@@ -3,3 +3,40 @@ dist
 .env
 .env.local
 .DS_Store
+Claude outputs/preppad-ui-update.zip
+Claude outputs/preppad-v3-update.zip
+Claude outputs/preppad.zip
+Claude outputs/preppad-v3-update/index.html
+Claude outputs/preppad-v3-update/package.json
+Claude outputs/preppad-v3-update/scripts/validate-data.mjs
+Claude outputs/preppad-v3-update/src/App.jsx
+Claude outputs/preppad-v3-update/src/main.jsx
+Claude outputs/preppad-v3-update/src/styles.css
+Claude outputs/preppad-v3-update/src/components/Browse.jsx
+Claude outputs/preppad-v3-update/src/components/Explain.jsx
+Claude outputs/preppad-v3-update/src/components/Flashcards.jsx
+Claude outputs/preppad-v3-update/src/components/Generate.jsx
+Claude outputs/preppad-v3-update/src/components/Home.jsx
+Claude outputs/preppad-v3-update/src/components/icons.jsx
+Claude outputs/preppad-v3-update/src/components/Markdown.jsx
+Claude outputs/preppad-v3-update/src/components/Mock.jsx
+Claude outputs/preppad-v3-update/src/components/Notes.jsx
+Claude outputs/preppad-v3-update/src/components/Onboarding.jsx
+Claude outputs/preppad-v3-update/src/components/Profile.jsx
+Claude outputs/preppad-v3-update/src/components/Settings.jsx
+Claude outputs/preppad-v3-update/src/components/Sketch.jsx
+Claude outputs/preppad-v3-update/src/components/ui.jsx
+Claude outputs/preppad-v3-update/src/data/backend.js
+Claude outputs/preppad-v3-update/src/data/core.js
+Claude outputs/preppad-v3-update/src/data/devops.js
+Claude outputs/preppad-v3-update/src/data/index.js
+Claude outputs/preppad-v3-update/src/data/web.js
+Claude outputs/preppad-v3-update/src/data/more/backend.js
+Claude outputs/preppad-v3-update/src/data/more/core.js
+Claude outputs/preppad-v3-update/src/data/more/devops.js
+Claude outputs/preppad-v3-update/src/data/more/web.js
+Claude outputs/preppad-v3-update/src/lib/ai.js
+Claude outputs/preppad-v3-update/src/lib/cloud.js
+Claude outputs/preppad-v3-update/src/lib/router.js
+Claude outputs/preppad-v3-update/src/lib/store.js
+Claude outputs/preppad-v3-update/src/lib/useSync.jsx

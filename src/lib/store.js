@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { BUILTIN_QUESTIONS, BUILTIN_NOTES, levelForYears } from '../data/index.js';
+import { BUILTIN_QUESTIONS, BUILTIN_CARDS, BUILTIN_NOTES, levelForYears } from '../data/index.js';
 
 const KEY = 'preppad_state_v1';
 
@@ -61,6 +61,7 @@ export function setProfile(patch) {
 
 /* ---------- question bank ---------- */
 export const allQuestions = (s) => [...BUILTIN_QUESTIONS, ...s.custom.questions];
+export const allDeck = (s) => [...BUILTIN_QUESTIONS, ...BUILTIN_CARDS, ...s.custom.questions];
 export const allNotes = (s) => [...BUILTIN_NOTES, ...s.custom.notes];
 
 export function addCustom(kind, items) {

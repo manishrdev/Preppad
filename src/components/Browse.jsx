@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { LEVELS, TOPICS } from '../data/index.js';
+import { LEVELS, TOPICS, TOPIC_GROUPS, CUSTOM_TOPIC } from '../data/index.js';
 import { useStore, allQuestions, removeCustom } from '../lib/store.js';
-import { LevelBadge, TopicTag, Answer, Empty } from './ui.jsx';
+import { LevelBadge, TopicTag, Answer, Empty, PageHeader } from './ui.jsx';
+import Icon from './icons.jsx';
+import { ExplainButton } from './Explain.jsx';
 
 export default function Browse() {
   const s = useStore();
@@ -16,39 +18,47 @@ export default function Browse() {
     (!q || (x.q + x.a).toLowerCase().includes(q.toLowerCase())));
 
   return (
-    <div className="stack">
-      <div className="card stack">
-        <h1>Question bank</h1>
-        <div className="grid3">
-          <input placeholder="Search questions…" value={q} onChange={(e) => setQ(e.target.value)} />
-          <select value={topic} onChange={(e) => setTopic(e.target.value)}>
+    <div className="stack-lg">
+      <PageHeader title="Question bank" sub={`Browse every question and answer. ${allQuestions(s).length} in total.`} />
+      <div className="stack">
+        <div className="filters">
+          <div className="search"><Icon name="bank" size={16} /><input placeholder="Search questions and answers" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search" /></div>
+          <select value={topic} onChange={(e) => setTopic(e.target.value)} aria-label="Topic">
             <option value="all">All topics</option>
-            {TOPICS.map((t) => <option key={t.id} value={t.id}>{t.icon} {t.name}</option>)}
-            {s.custom.questions.length > 0 && <option value="custom">✨ My Custom Topics</option>}
+            {TOPIC_GROUPS.map((g) => (
+              <optgroup key={g} label={g}>{TOPICS.filter((t) => t.group === g).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}</optgroup>
+            ))}
+            {s.custom.questions.length > 0 && <option value="custom">{CUSTOM_TOPIC.name}</option>}
           </select>
-          <select value={level} onChange={(e) => setLevel(e.target.value)}>
+          <select value={level} onChange={(e) => setLevel(e.target.value)} aria-label="Level">
             <option value="all">All levels</option>
-            {LEVELS.map((l) => <option key={l.id} value={l.id}>{l.name} ({l.years})</option>)}
+            {LEVELS.map((l) => <option key={l.id} value={l.id}>{l.name} · {l.years}</option>)}
           </select>
         </div>
-        <label className="row gap check"><input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} /> Show all answers</label>
-        <p className="muted small">{list.length} questions</p>
+        <div className="row between">
+          <span className="small muted">{list.length} question{list.length === 1 ? '' : 's'}</span>
+          <label className="check"><input type="checkbox" checked={showAll} onChange={(e) => setShowAll(e.target.checked)} /> Show all answers</label>
+        </div>
       </div>
-      {!list.length && <Empty>Nothing matches those filters.</Empty>}
-      {list.map((x) => {
-        const isOpen = showAll || open[x.id];
-        return (
-          <div key={x.id} className="card qcard">
-            <div className="row gap wrap"><TopicTag q={x} /><LevelBadge level={x.level} />{x.source === 'ai' && <span className="badge ai">AI</span>}</div>
-            <h3 className="question">{x.q}</h3>
-            {isOpen ? <Answer text={x.a} /> : null}
-            <div className="row gap">
-              <button className="btn sm" onClick={() => setOpen({ ...open, [x.id]: !open[x.id] })}>{isOpen && !showAll ? 'Hide answer' : 'Show answer'}</button>
-              {x.source === 'ai' && <button className="link" onClick={() => removeCustom('questions', x.id)}>remove</button>}
-            </div>
-          </div>
-        );
-      })}
+      {!list.length ? <Empty>Nothing matches those filters.</Empty> : (
+        <div className="card flush">
+          {list.map((x) => {
+            const isOpen = showAll || open[x.id];
+            return (
+              <div key={x.id} className="q-row">
+                <div className="row gap wrap"><TopicTag q={x} /><LevelBadge level={x.level} />{x.source === 'ai' && <span className="pill ai">AI generated</span>}</div>
+                <h3 className="question" style={{ fontSize: '1.02rem' }}>{x.q}</h3>
+                {isOpen && <Answer text={x.a} />}
+                <div className="row gap">
+                  {!showAll && <button className="btn sm" onClick={() => setOpen({ ...open, [x.id]: !open[x.id] })}>{isOpen ? 'Hide answer' : 'Show answer'}</button>}
+                  <ExplainButton item={{ kind: 'interview question', topicId: x.topic, topicLabel: x.subject, level: x.level, title: x.q, body: x.a }} />
+                  {x.source === 'ai' && <button className="btn sm quiet danger" onClick={() => removeCustom('questions', x.id)}>Remove</button>}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
