@@ -56,24 +56,6 @@ git push -u origin main
 
 Then in the repo: **Settings > Pages > Source: GitHub Actions**. The included workflow (`.github/workflows/deploy.yml`) builds and publishes on every push to `main`. Your site appears at `https://<you>.github.io/preppad/`. The app uses hash routing and relative asset paths, so no extra config is needed for sub-path hosting.
 
-### Other free static hosts (any of these works with `npm run build` -> `dist`)
-
-| Host | Notes |
-| --- | --- |
-| GitHub Pages | Easiest since the code is already on GitHub. Public repos free. |
-| Netlify | Import the repo, build `npm run build`, publish `dist`. Deploy previews per PR. |
-| Vercel | Import the repo, framework preset Vite. |
-| Firebase Hosting | Nice if you already use Firebase for sync; `firebase deploy`. |
-| Render / Koyeb static sites | Simple alternatives with a free static tier. |
-
-### Backend alternatives to Supabase (if you outgrow Firebase)
-
-- **Firebase** (used here): easiest from a static site, no server code.
-- **Appwrite Cloud**: open-source BaaS with auth, database and storage, generous free plan.
-- **PocketBase**: single-binary backend you self-host (free tiers on Fly.io or a small VPS).
-- **Neon / Turso + a tiny API**: serverless Postgres/SQLite when you want SQL, but needs a small backend function.
-
-Free-tier limits change, so check each provider's current pricing page before committing.
 
 ## Project structure
 
