@@ -5,6 +5,7 @@ import { SyncProvider, useSync } from './lib/useSync.jsx';
 import Icon, { Logo } from './components/icons.jsx';
 import Onboarding from './components/Onboarding.jsx';
 import Home from './components/Home.jsx';
+import Roadmap from './components/Roadmap.jsx';
 import Mock from './components/Mock.jsx';
 import Flashcards from './components/Flashcards.jsx';
 import Notes from './components/Notes.jsx';
@@ -15,6 +16,7 @@ import Settings from './components/Settings.jsx';
 
 const NAV = [
   ['home', 'home', 'Dashboard', 'Home'],
+  ['roadmap', 'flag', 'Roadmap', 'Plan'],
   ['mock', 'mic', 'Mock interview', 'Mock'],
   ['cards', 'cards', 'Flash cards', 'Cards'],
   ['notes', 'notes', 'Concept notes', 'Notes'],
@@ -22,7 +24,7 @@ const NAV = [
   ['generate', 'sparkles', 'Generate with AI', 'AI'],
   ['settings', 'settings', 'Settings', 'Settings'],
 ];
-const VIEWS = { home: Home, mock: Mock, cards: Flashcards, notes: Notes, browse: Browse, generate: Generate, settings: Settings };
+const VIEWS = { home: Home, roadmap: Roadmap, mock: Mock, cards: Flashcards, notes: Notes, browse: Browse, generate: Generate, settings: Settings };
 
 /* ---- theme: light / dark, defaulting to the system setting ---- */
 const THEME_KEY = 'preppad_theme';
@@ -73,13 +75,13 @@ function Shell() {
       <aside className="sidebar">
         <a className="brand" href="#/home"><Logo /> PrepPad</a>
         <nav className="side-nav" aria-label="Primary">
-          {NAV.slice(0, 5).map(([id, icon, label]) => (
+          {NAV.slice(0, 6).map(([id, icon, label]) => (
             <a key={id} href={`#/${id}`} className={active === id ? 'active' : ''} aria-current={active === id ? 'page' : undefined}>
               <Icon name={icon} /> {label}
             </a>
           ))}
           <div className="eyebrow side-label">Tools</div>
-          {NAV.slice(5).map(([id, icon, label]) => (
+          {NAV.slice(6).map(([id, icon, label]) => (
             <a key={id} href={`#/${id}`} className={active === id ? 'active' : ''} aria-current={active === id ? 'page' : undefined}>
               <Icon name={icon} /> {label}
             </a>

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { BUILTIN_QUESTIONS, BUILTIN_CARDS, BUILTIN_NOTES, levelForYears } from '../data/index.js';
+import { BUILTIN_QUESTIONS, BUILTIN_CARDS, BUILTIN_NOTES, TOPICS, levelForYears } from '../data/index.js';
 
 const KEY = 'preppad_state_v1';
 
@@ -104,6 +104,78 @@ export function rateCard(qid, rating) {
 /* ---------- interviews ---------- */
 export function saveInterview(rec) {
   update((s) => ({ ...s, history: [rec, ...s.history.filter((h) => h.id !== rec.id)].slice(0, 200) }));
+}
+
+/* ---------- roadmap: readiness computed from existing activity ---------- */
+/* No manual tracking state. Every number here is derived from `history` (mock */
+/* interviews) and `cards` (flash-card Leitner boxes) that already exist for   */
+/* other features, so there is nothing to set up and nothing to keep in sync.  */
+const dateKey = (d) => {
+  const x = new Date(d);
+  return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+};
+
+/* Blend of mock-interview accuracy and flash-card mastery across a set of question ids. */
+/* Returns 0-1, or 0 when nothing in the set has been touched yet. */
+function readinessForIds(s, ids) {
+  if (!ids.length) return 0;
+  const idSet = new Set(ids);
+  let gradedSum = 0, gradedCount = 0;
+  for (const h of s.history) {
+    for (const it of h.items || []) {
+      if (!it.grade || !idSet.has(it.qid)) continue;
+      gradedSum += it.grade === 'got' ? 1 : it.grade === 'partial' ? 0.5 : 0;
+      gradedCount++;
+    }
+  }
+  const mockScore = gradedCount ? gradedSum / gradedCount : null;
+
+  let boxSum = 0, boxCount = 0;
+  for (const id of ids) {
+    const c = s.cards[id];
+    if (!c) continue;
+    boxSum += c.box / 5;
+    boxCount++;
+  }
+  const cardScore = boxCount ? boxSum / boxCount : null;
+
+  if (mockScore === null && cardScore === null) return 0;
+  if (mockScore === null) return cardScore;
+  if (cardScore === null) return mockScore;
+  return (mockScore + cardScore) / 2;
+}
+
+export function topicReadiness(s, topicId) {
+  const ids = allQuestions(s).filter((q) => q.topic === topicId).map((q) => q.id);
+  return readinessForIds(s, ids);
+}
+export function subjectReadiness(s, topicId, subject) {
+  const ids = allQuestions(s).filter((q) => q.topic === topicId && q.subject === subject).map((q) => q.id);
+  return readinessForIds(s, ids);
+}
+export function overallReadiness(s) {
+  if (!TOPICS.length) return 0;
+  return TOPICS.reduce((sum, t) => sum + topicReadiness(s, t.id), 0) / TOPICS.length;
+}
+
+/* A day counts toward the streak if a mock interview was taken or a flash card was rated that day. */
+function activeDateKeys(s) {
+  const days = new Set();
+  for (const h of s.history) days.add(dateKey(h.date));
+  for (const c of Object.values(s.cards)) if (c.updatedAt) days.add(dateKey(c.updatedAt));
+  return days;
+}
+export function dayStreak(s, today = new Date()) {
+  const days = activeDateKeys(s);
+  let d = new Date(today);
+  d.setHours(0, 0, 0, 0);
+  if (!days.has(dateKey(d))) d = new Date(d.getTime() - DAY);
+  let streak = 0;
+  while (days.has(dateKey(d))) {
+    streak++;
+    d = new Date(d.getTime() - DAY);
+  }
+  return streak;
 }
 
 /* ---------- cloud merge: last-write-wins per item ---------- */

@@ -23,6 +23,7 @@ const P = {
   upload: ['M12 15V3', 'm7 8 5-5 5 5', 'M4 21h16'],
   cloud: ['M17.5 19a4.5 4.5 0 1 0-1.4-8.8A6 6 0 1 0 6 18.5z'],
   book: ['M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2z', 'M8 7h6'],
+  flag: ['M5 21V4', 'M5 4h13l-2.5 4L18 12H5'],
 };
 
 export default function Icon({ name, size = 18, className = '' }) {

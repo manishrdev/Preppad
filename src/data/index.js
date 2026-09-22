@@ -1,4 +1,5 @@
 import { java, oops, ds, javaVersions, python, sql } from './core.js';
+import { dsa, lld, genai } from './roadmapTopics.js';
 import { spring, springboot, maven, restapi } from './backend.js';
 import { jenkins, cicd, aws, architecture } from './devops.js';
 import { react, javascript, html } from './web.js';
@@ -38,6 +39,9 @@ const raw = [
   ['html', 'HTML & CSS', '🌐', html],
   ['python', 'Python', '🐍', python],
   ['sql', 'SQL', '🗄️', sql],
+  ['dsa', 'DSA Patterns', '🧮', dsa],
+  ['lld', 'LLD & HLD', '🏗️', lld],
+  ['genai', 'GenAI', '✨', genai],
 ];
 
 const GROUPS = {
@@ -46,6 +50,7 @@ const GROUPS = {
   spring: 'Frameworks & APIs', springboot: 'Frameworks & APIs', restapi: 'Frameworks & APIs', react: 'Frameworks & APIs',
   maven: 'Build, CI/CD & cloud', jenkins: 'Build, CI/CD & cloud', cicd: 'Build, CI/CD & cloud', aws: 'Build, CI/CD & cloud',
   architecture: 'Design & architecture',
+  dsa: 'Interview roadmap', lld: 'Interview roadmap', genai: 'Interview roadmap',
 };
 export const TOPICS = raw.map(([id, name, icon]) => ({ id, name, icon, group: GROUPS[id] }));
 export const TOPIC_GROUPS = [...new Set(Object.values(GROUPS))];
@@ -59,7 +64,7 @@ export const topicHue = (id) => {
 
 // Original entries keep their ids; new content is appended so saved progress stays valid.
 export const BUILTIN_QUESTIONS = raw.flatMap(([topic, , , d]) =>
-  [...d.questions, ...(more[topic]?.questions || [])].map(([level, q, a], i) => ({ id: `${topic}-${i + 1}`, topic, level, q, a, source: 'builtin' }))
+  [...d.questions, ...(more[topic]?.questions || [])].map(([level, q, a, subject], i) => ({ id: `${topic}-${i + 1}`, topic, level, q, a, subject, source: 'builtin' }))
 );
 
 export const BUILTIN_NOTES = raw.flatMap(([topic, , , d]) =>
@@ -70,6 +75,13 @@ export const BUILTIN_NOTES = raw.flatMap(([topic, , , d]) =>
 export const BUILTIN_CARDS = raw.flatMap(([topic]) =>
   (more[topic]?.cards || []).map(([level, q, a], i) => ({ id: `${topic}-c${i + 1}`, topic, level, q, a, source: 'builtin', kind: 'card' }))
 );
+
+// Ordered pattern names used as the `subject` tag on DSA questions (see roadmapTopics.js),
+// and to render the expandable per-pattern breakdown on the Roadmap page.
+export const DSA_PATTERN_SUBJECTS = [
+  'Arrays & Hashing', 'Two Pointers', 'Sliding Window', 'Binary Search', 'Stack',
+  'Linked List', 'Trees', 'Heap', 'Graphs (BFS/DFS)', 'Backtracking', 'Dynamic Programming', 'Greedy',
+];
 
 export const CUSTOM_TOPIC = { id: 'custom', name: 'Custom topics', icon: '', group: 'Custom' };
 export const topicName = (id) => [...TOPICS, CUSTOM_TOPIC].find((t) => t.id === id)?.name || id;

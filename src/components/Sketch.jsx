@@ -43,9 +43,9 @@ export default function Sketch({ diagram, seed = 'x' }) {
           return (
             <g key={i}>
               <path d={roughRect(30, y, BW, BH - 8, r)} fill={COLORS[i % COLORS.length]} stroke="#2b2b2b" strokeWidth="2" strokeLinecap="round" fillOpacity=".75" />
-              <text x={30 + BW / 2} y={y + (BH - 8) / 2 + 6} textAnchor="middle" className="sk-text">
-                {wrap(t, 20)[0]}
-              </text>
+              {wrap(t, 18).slice(0, 2).map((ln, li, arr) => (
+                <text key={li} x={30 + BW / 2} y={y + (BH - 8) / 2 + 6 - (arr.length - 1) * 9 + li * 18} textAnchor="middle" className="sk-text">{ln}</text>
+              ))}
             </g>
           );
         })}

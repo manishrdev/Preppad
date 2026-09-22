@@ -301,3 +301,17 @@ input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); }
   .drawer { width: 100%; height: 86vh; border-left: 0; border-top: 1px solid var(--border); border-radius: 16px 16px 0 0; animation: slideup .22s ease; }
 }
 @keyframes slideup { from { transform: translateY(30px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ============ Roadmap (readiness) ============ */
+.streak-badge { display: inline-flex; align-items: center; gap: 6px; font-weight: 650; font-size: .92rem; color: var(--warn); background: var(--warn-soft); padding: 6px 12px; border-radius: 999px; }
+.group-card { margin-bottom: 18px; }
+.group-card:last-child { margin-bottom: 0; }
+.group-card .card-title h3 { font-size: .88rem; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); font-weight: 650; }
+.group-card .card-title span.avg { font-size: .82rem; color: var(--text-2); font-weight: 600; }
+.meter.sub { padding-left: 20px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) 40px; }
+.meter.sub .name { font-size: .85rem; color: var(--text-2); }
+.expand-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; cursor: pointer; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) 44px; display: grid; }
+.expand-row .name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.expand-row .chev { color: var(--text-3); transition: transform .15s; }
+.expand-row.open .chev { transform: rotate(180deg); }
+.sub-list { display: flex; flex-direction: column; }
